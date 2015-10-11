@@ -6,9 +6,9 @@ import bnc_fields
 
 templatefile = '../../types/template/types.sqlite'
 wcfile = '../common/input-bnc/wordcounts.txt'
-dbfile = 'db/types.sqlite'
 
-ODIR = 'output-bnc'
+ODIR = 'output/bnc'
+DBDIR = 'output/db'
 
 BAD_URL = 'http://new-bncweb.lancs.ac.uk/'
 GOOD_URL = 'http://bncweb.lancs.ac.uk/'
@@ -82,7 +82,8 @@ def create(prefixes=[None]):
                 ds.tokenlist[(speaker,token)].append((left, this, right, url))
                 ds.tokeninfo[token] = lemma.lower()
 
-    os.makedirs('db', exist_ok=True)
+    os.makedirs(DBDIR, exist_ok=True)
+    dbfile = os.path.join(DBDIR, 'types.sqlite')
     shutil.copy(templatefile, dbfile)
     conn = sqlite3.connect(dbfile)
     conn.execute('''PRAGMA foreign_keys = ON''')

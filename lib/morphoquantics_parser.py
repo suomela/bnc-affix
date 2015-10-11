@@ -141,10 +141,10 @@ class Parser:
         self.f_label = f_label
         self.typos = typos
         if filenum is None:
-            self.infile = 'input-morphoquantics/_{}.txt'.format(suffix)
+            self.infile = 'input/morphoquantics/_{}.txt'.format(suffix)
             self.header = '-{} '.format(suffix)
         else:
-            self.infile = 'input-morphoquantics/_{}_sup{}.txt'.format(suffix, filenum)
+            self.infile = 'input/morphoquantics/_{}_sup{}.txt'.format(suffix, filenum)
             self.header = '-{}{} '.format(suffix, filenum)
 
     def get_word(self, word):
@@ -260,9 +260,9 @@ class Builder:
             (self.c_map, 'coarse'),
             (self.f_map, 'fine')
         ]:
-            outfile = 'output-morphoquantics/{}-map.txt'.format(version)
-            dupfile = 'output-morphoquantics/{}-ambiguous.txt'.format(version)
-            hapfile = 'output-morphoquantics/{}-hapax.txt'.format(version)
+            outfile = 'output/morphoquantics/{}-map.txt'.format(version)
+            dupfile = 'output/morphoquantics/{}-ambiguous.txt'.format(version)
+            hapfile = 'output/morphoquantics/{}-hapax.txt'.format(version)
             print(outfile)
             print(dupfile)
             print(hapfile)
@@ -287,7 +287,7 @@ class Builder:
 
 def process(suffixes, typos):
     builder = Builder()
-    os.makedirs('output-morphoquantics', exist_ok=True)
+    os.makedirs('output/morphoquantics', exist_ok=True)
     for suffix, filenum, f_label in suffixes:
         builder.read_one(suffix, filenum, f_label, typos)
     builder.process()

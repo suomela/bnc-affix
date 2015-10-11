@@ -3,9 +3,9 @@ import itertools
 import os
 import bnc_fields
 
-IDIR = 'input-bnc'
-MDIR = 'output-morphoquantics'
-ODIR = 'output-bnc'
+IDIR = 'input/bnc'
+MDIR = 'output/morphoquantics'
+ODIR = 'output/bnc'
 
 def tprint(f, l):
     f.write('\t'.join(str(x) for x in l))
