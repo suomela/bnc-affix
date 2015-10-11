@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+import morphoquantics_parser
+
+morphoquantics_parser.process(
+    suffixes = [
+        ("er", 1, "er-person"),
+        ("er", 2, "er-person"),
+        ("er", 3, "er-thing"),
+        ("er", 4, "er-thing"),
+        ("or", 1, "or-person"),
+        ("or", 2, "or-thing"),
+    ],
+    typos = {
+        'PARISHONER': 'PARISHIONER',
+        'REFRIDGERATOR': 'REFRIGERATOR',
+    }
+)

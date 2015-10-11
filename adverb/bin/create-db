@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+
+import types_db_creator
+
+types_db_creator.create()

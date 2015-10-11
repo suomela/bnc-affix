@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import morphoquantics_parser
+
+morphoquantics_parser.process(
+    suffixes = [
+        ("ly", 2, "ly-adverb"),
+        ('wise', None, "wise"),
+    ],
+    typos = {
+        'DISCRIMIATELY': 'DISCRIMINATELY',
+        'MONEY-WISE': 'MONEYWISE',
+    }
+)

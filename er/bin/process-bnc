@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+import bnc_parser
+
+bnc_parser.process(
+    labels=['er', 'or'],
+    suffixes=['er', 'or'],
+)
+bnc_parser.process(
+    labels=['er-person', 'er-thing', 'or-person', 'or-thing'],
+    suffixes=['er', 'or'],
+    mapfile='fine-map.txt',
+    prefix='fine',
+    missfiles=False,
+)
+bnc_parser.process(
+    labels=['er-person', 'er-thing', 'or-person', 'or-thing'],
+    suffixes=['er', 'or'],
+    mapfile='fine-hapax.txt',
+    prefix='hapax',
+    missfiles=False,
+)
+
+bnc_parser.find_overuse()
