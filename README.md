@@ -71,3 +71,7 @@ Usage
 Once all files are in place, you can run everything as follows:
 
     ./do-all.sh
+
+To get approximate results faster, try:
+
+    ./do-all.sh --quick
