@@ -25,7 +25,7 @@ def create(prefixes=[None]):
     speaker_link = {}
     speaker_bad = set()
     speaker_wc = collections.Counter()
-    groups = ('sex', 'social class')
+    groups = ('gender', 'social class')
     sex_map = { 'f': 'Female', 'm': 'Male' }
     age_map = {
         'Ag0':   '-14', 'Ag1': '15-24', 'Ag2': '25-34',
@@ -43,7 +43,7 @@ def create(prefixes=[None]):
                 speaker_bad.add(speaker)
                 continue
             speaker_wc[speaker] += int(w)
-            colls["sex"][sex_map[sex]].add(speaker)
+            colls['gender'][sex_map[sex]].add(speaker)
             for sc_group in sc_groups:
                 if sc in sc_group:
                     groupcode = '+'.join(sc_group)
@@ -70,7 +70,7 @@ def create(prefixes=[None]):
                     continue
                 assert speaker in speaker_wc
                 if sex != 'Unknown':
-                    assert speaker in colls['sex'][sex]
+                    assert speaker in colls['gender'][sex]
                 token = ' '.join((lemma, goodpos))
                 left = rest[bnc_fields.i_left]
                 this = rest[bnc_fields.i_this]
