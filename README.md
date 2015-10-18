@@ -64,6 +64,9 @@ the naming convention used by Morphoquantics:
     adverb/input/morphoquantics/_ly_sup2.txt
     adverb/input/morphoquantics/_wise.txt
 
+For the BNC search results, do a search for e.g. *er in spoken texts and
+download the results using the settings shown in
+docs/bncweb_downloadsettings.png.
 
 Usage
 -----
