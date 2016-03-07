@@ -2,23 +2,51 @@
 
 import bnc_parser
 
+expect_fewer=[
+    ('CONSUMERS', '(NN2)'),
+    ('EMPLOYER', '(NN1)'),
+    ('EMPLOYERS', '(NN2)'),
+    ('PAYERS', '(NN2)'),
+    ('RETAILERS', '(NN2)'),
+    ('SECTOR', '(NN1)'),
+    ('STRIKERS', '(NN2)'),
+    ('SUB-CONTRACTORS', '(NN2)'),
+    ('TRAVELLER', '(NN1)'),
+    ('WANDERERS', '(NN2)'),
+    ('WORKERS', '(NN2)'),
+    ('COMPUTERS', '(NN2)'),
+    ('DOCTOR', '(NN1)'),
+]
+correction_default_pos='(NN1)'
+
 bnc_parser.process(
     labels=['er', 'or'],
     suffixes=['er', 'or'],
+    expect_fewer=expect_fewer,
+    correction_default_pos=correction_default_pos,
+    correction_label_map={
+        "er1": "er",
+        "er2": "er",
+        "er3": "er",
+        "er4": "er",
+        "or1": "or",
+        "or2": "or",
+    },
 )
+
 bnc_parser.process(
     labels=['er-person', 'er-thing', 'or-person', 'or-thing'],
     suffixes=['er', 'or'],
     mapfile='fine-map.txt',
     prefix='fine',
-    missfiles=False,
+    expect_fewer=expect_fewer,
+    correction_default_pos=correction_default_pos,
+    correction_label_map={
+        "er1": "er-person",
+        "er2": "er-person",
+        "er3": "er-thing",
+        "er4": "er-thing",
+        "or1": "or-person",
+        "or2": "or-thing",
+    },
 )
-bnc_parser.process(
-    labels=['er-person', 'er-thing', 'or-person', 'or-thing'],
-    suffixes=['er', 'or'],
-    mapfile='fine-hapax.txt',
-    prefix='hapax',
-    missfiles=False,
-)
-
-bnc_parser.find_overuse()

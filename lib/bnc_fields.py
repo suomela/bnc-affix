@@ -47,6 +47,7 @@ for i, f in enumerate(fields):
     index[f] = i
 
 i_text = index['Textname']
+i_sunit = index['S-unit number']
 i_word_pos = index['Tagged Query item']
 i_texttype = index['Text type']
 i_speaker = index['Speaker-ID (if applicable)']
@@ -56,3 +57,4 @@ i_left = index['Left context']
 i_this = index['Query item']
 i_right = index['Right context']
 i_url = index['URL']
+i_where = index['Matchend corpus position']
