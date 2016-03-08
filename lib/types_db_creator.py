@@ -54,6 +54,7 @@ def create(prefixes=[None]):
             speaker_link[speaker] = SPEAKER_URL.format(text, speaker)
 
     datasets = collections.defaultdict(Dataset)
+    lemma_map = {}
     for prefix in prefixes:
         if prefix is not None:
             filename = os.path.join(ODIR, prefix + '-relevant.txt')
@@ -63,6 +64,11 @@ def create(prefixes=[None]):
             for l in f:
                 fields = l.rstrip('\n').split('\t')
                 word, pos, label, section, lemma, goodpos = fields[:6]
+                if lemma in lemma_map:
+                    assert lemma_map[lemma] == (section, goodpos)
+                else:
+                    lemma_map[lemma] = (section, goodpos)
+                token = lemma.lower()
                 rest = fields[6:]
                 sex = rest[bnc_fields.i_sex]
                 speaker = rest[bnc_fields.i_speaker]
@@ -71,7 +77,6 @@ def create(prefixes=[None]):
                 assert speaker in speaker_wc
                 if sex != 'Unknown':
                     assert speaker in colls['gender'][sex]
-                token = ' '.join((lemma, goodpos))
                 left = rest[bnc_fields.i_left]
                 this = rest[bnc_fields.i_this]
                 right = rest[bnc_fields.i_right]
@@ -80,7 +85,6 @@ def create(prefixes=[None]):
                     url = GOOD_URL + url[len(BAD_URL):]
                 ds = datasets[label]
                 ds.tokenlist[(speaker,token)].append((left, this, right, url))
-                ds.tokeninfo[token] = lemma.lower()
 
     os.makedirs(DBDIR, exist_ok=True)
     dbfile = os.path.join(DBDIR, 'types.sqlite')
@@ -115,11 +119,6 @@ def create(prefixes=[None]):
                     'INSERT INTO context (corpuscode, samplecode, datasetcode, tokencode, before, word, after, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                     (corpus, speaker, dslabel, token, left, this, right, url)
                 )
-        for token in sorted(ds.tokeninfo.keys()):
-            conn.execute(
-                'INSERT INTO tokeninfo (corpuscode, datasetcode, tokencode, shortlabel, longlabel) VALUES (?, ?, ?, ?, ?)',
-                (corpus, dslabel, token, ds.tokeninfo[token], token)
-            )
     for group in groups:
         for key in sorted(colls[group].keys()):
             conn.execute(
