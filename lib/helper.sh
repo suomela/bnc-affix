@@ -13,6 +13,6 @@ cd output || exit 1
 if [ "$1" = "--quick" ]; then
     $types/bin/types-run --recalc --citer=100000 --piter=100000 || exit 1
 else
-    $types/bin/types-run --recalc --piter=10000000 || exit 1
+    $types/bin/types-run --recalc || exit 1
 fi
 $types/bin/types-web || exit 1
