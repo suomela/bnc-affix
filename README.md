@@ -3,6 +3,9 @@ bnc-affix
 
 Analysing the productivity of affixes with BNC and Morphoquantics data.
 
+These scripts are used to produce one of the data sets here:
+https://github.com/suomela/types-examples
+
 
 General setup
 -------------
