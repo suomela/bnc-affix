@@ -20,17 +20,22 @@ class Dataset:
         self.tokeninfo = {}
 
 
-def create(prefixes=[None]):
+def create(prefixes=[None], label_map=lambda x: x):
     speaker_descr = {}
     speaker_link = {}
     speaker_bad = set()
     speaker_wc = collections.Counter()
-    groups = ('gender', 'social class')
+    groups = ('gender', 'social class', 'social class + gender', 'age', 'age + gender')
     sex_map = { 'f': 'Female', 'm': 'Male' }
     age_map = {
         'Ag0':   '-14', 'Ag1': '15-24', 'Ag2': '25-34',
         'Ag3': '35-44', 'Ag4': '45-59', 'Ag5': '60-',
         'X': 'Unknown'
+    }
+    age2_map = {
+        'Ag0': '-24', 'Ag1': '-24', 'Ag2': '25-44',
+        'Ag3': '25-44', 'Ag4': '45-', 'Ag5': '45-',
+        'X': None
     }
     sc_groups = [['AB', 'C1'], ['C2', 'DE']]
     colls = { group: collections.defaultdict(set) for group in groups }
@@ -47,7 +52,14 @@ def create(prefixes=[None]):
             for sc_group in sc_groups:
                 if sc in sc_group:
                     groupcode = '+'.join(sc_group)
-                    colls["social class"][groupcode].add(speaker)
+                    colls['social class'][groupcode].add(speaker)
+                    groupcode += ' ' + sex_map[sex]
+                    colls['social class + gender'][groupcode].add(speaker)
+            groupcode = age2_map[agegroup]
+            if groupcode is not None:
+                colls['age'][groupcode].add(speaker)
+                groupcode += ' ' + sex_map[sex]
+                colls['age + gender'][groupcode].add(speaker)
             speaker_descr[speaker] = '{} {} {}'.format(
                 sc, sex_map[sex], age_map[agegroup]
             )
@@ -83,7 +95,7 @@ def create(prefixes=[None]):
                 url = rest[bnc_fields.i_url]
                 if url[:len(BAD_URL)] == BAD_URL:
                     url = GOOD_URL + url[len(BAD_URL):]
-                ds = datasets[label]
+                ds = datasets[label_map(label)]
                 ds.tokenlist[(speaker,token)].append((left, this, right, url))
 
     os.makedirs(DBDIR, exist_ok=True)
@@ -131,6 +143,6 @@ def create(prefixes=[None]):
                     (corpus, speaker, key)
                 )
     conn.execute('DELETE FROM defaultstat')
-    for stat in ('type-token', 'hapax-token', 'type-word', 'hapax-word', 'token-word'):
+    for stat in ('type-token', 'type-word', 'token-word'):
         conn.execute('INSERT INTO defaultstat VALUES (?)', (stat,))
     conn.commit()
