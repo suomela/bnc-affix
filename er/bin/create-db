@@ -2,4 +2,16 @@
 
 import types_db_creator
 
-types_db_creator.create([None, 'fine'])
+LABEL_MAP = {
+    'er':           'er+or',
+    'er-person':    'er+or person',
+    'er-thing':     'er+or thing',
+    'or':           'er+or',
+    'or-person':    'er+or person',
+    'or-thing':     'er+or thing',
+}
+
+def label_map(x):
+    return LABEL_MAP[x]
+
+types_db_creator.create(prefixes=[None, 'fine'], label_map=label_map)
