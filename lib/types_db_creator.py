@@ -187,6 +187,6 @@ def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing
                     (corpus, speaker, key)
                 )
     conn.execute('DELETE FROM defaultstat')
-    for stat in ('type-token', 'type-word', 'token-word'):
+    for stat in ('type-token', 'type-word'):
         conn.execute('INSERT INTO defaultstat VALUES (?)', (stat,))
     conn.commit()
