@@ -5,7 +5,7 @@ import sqlite3
 import bnc_fields
 
 templatefile = '../../types/template/types.sqlite'
-wcfile = '../common/input-bnc/wordcounts.txt'
+metadatadb = '../../bnc-metadata-output/bnc.db'
 
 ODIR = 'output/bnc'
 DBDIR = 'output/db'
@@ -19,51 +19,87 @@ class Dataset:
         self.tokenlist = collections.defaultdict(list)
         self.tokeninfo = {}
 
-
-def create(prefixes=[None], label_map=lambda x: x):
-    speaker_descr = {}
-    speaker_link = {}
-    speaker_bad = set()
-    speaker_wc = collections.Counter()
+def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing=False):
     groups = ('gender', 'social class', 'social class + gender', 'age', 'age + gender')
     sex_map = { 'f': 'Female', 'm': 'Male' }
-    age_map = {
+    age_descr_map = {
         'Ag0':   '-14', 'Ag1': '15-24', 'Ag2': '25-34',
         'Ag3': '35-44', 'Ag4': '45-59', 'Ag5': '60-',
-        'X': 'Unknown'
+        'X': '?'
     }
-    age2_map = {
+    age_group_map = {
         'Ag0': '-24', 'Ag1': '-24', 'Ag2': '25-44',
         'Ag3': '25-44', 'Ag4': '45-', 'Ag5': '45-',
         'X': None
     }
     sc_groups = [['AB', 'C1'], ['C2', 'DE']]
+
+    conn = sqlite3.connect(metadatadb)
+
+    settings = set()
+    for text, setting, l, a in conn.execute('''
+        SELECT fileid, settingid, LOWER(locale), LOWER(activity) FROM bnc_setting
+    '''):
+        if setting_filter is None:
+            ok = True
+        elif setting_filter == 'home':
+            if l in ('home', 'at home', 'bedroom', 'home, bedroom', 'kitchen', 'lounge', 'mome'):
+                ok = True
+            elif l == 'sitting at table' and a == 'having breakfast':
+                ok = True
+            else:
+                ok = False
+        else:
+            assert False
+        if ok:
+            settings.add((text, setting))
+
+    relevant_wc = collections.Counter()
+    relevant_line = {}
+    for text, sunit, speaker, setting, wc in conn.execute('''
+        SELECT fileid, n, personid, settingid, wordcount FROM bnc_s
+    '''):
+        if (text, setting) in settings:
+            relevant_wc[(text, speaker)] += wc
+            relevant_line[(text, sunit)] = True
+        else:
+            relevant_line[(text, sunit)] = False
+
+    speaker_wc = {}
+    speaker_descr = {}
+    speaker_link = {}
     colls = { group: collections.defaultdict(set) for group in groups }
-    with open(wcfile) as f:
-        l = f.readline()
-        for l in f:
-            fields = l.rstrip('\n').split('\t')
-            text, speaker, agegroup, sc, sex, u, s, w, c, unclear = fields
-            if sex == 'u' or sc == 'UU':
-                speaker_bad.add(speaker)
-                continue
-            speaker_wc[speaker] += int(w)
-            colls['gender'][sex_map[sex]].add(speaker)
-            for sc_group in sc_groups:
-                if sc in sc_group:
-                    groupcode = '+'.join(sc_group)
-                    colls['social class'][groupcode].add(speaker)
-                    groupcode += ' ' + sex_map[sex]
-                    colls['social class + gender'][groupcode].add(speaker)
-            groupcode = age2_map[agegroup]
-            if groupcode is not None:
-                colls['age'][groupcode].add(speaker)
+    for text, speaker, agegroup, sex, sc, occupation in conn.execute('''
+        SELECT fileid, personid, ageGroup, sex, soc, occupation FROM bnc_person
+    '''):
+        if relevant_wc[(text, speaker)] == 0:
+            continue
+        if sex is None or sex == 'u':
+            continue
+        if sc is None or sc == 'UU':
+            continue
+        colls['gender'][sex_map[sex]].add(speaker)
+        for sc_group in sc_groups:
+            if sc in sc_group:
+                groupcode = '+'.join(sc_group)
+                colls['social class'][groupcode].add(speaker)
                 groupcode += ' ' + sex_map[sex]
-                colls['age + gender'][groupcode].add(speaker)
-            speaker_descr[speaker] = '{} {} {}'.format(
-                sc, sex_map[sex], age_map[agegroup]
-            )
-            speaker_link[speaker] = SPEAKER_URL.format(text, speaker)
+                colls['social class + gender'][groupcode].add(speaker)
+        groupcode = age_group_map[agegroup]
+        if groupcode is not None:
+            colls['age'][groupcode].add(speaker)
+            groupcode += ' ' + sex_map[sex]
+            colls['age + gender'][groupcode].add(speaker)
+        descr = [sc, sex, age_descr_map[agegroup]]
+        if occupation is not None:
+            descr.append(occupation)
+
+        assert speaker not in speaker_wc
+        speaker_wc[speaker] = relevant_wc[(text, speaker)]
+        speaker_descr[speaker] = ' '.join(descr)
+        speaker_link[speaker] = SPEAKER_URL.format(text, speaker)
+
+    conn.close()
 
     datasets = collections.defaultdict(Dataset)
     lemma_map = {}
@@ -76,19 +112,21 @@ def create(prefixes=[None], label_map=lambda x: x):
             for l in f:
                 fields = l.rstrip('\n').split('\t')
                 word, pos, label, section, lemma, goodpos = fields[:6]
+                rest = fields[6:]
+                text = rest[bnc_fields.i_text]
+                sunit = rest[bnc_fields.i_sunit]
+                speaker = rest[bnc_fields.i_speaker]
+                if not relevant_line[(text, sunit)]:
+                    continue
+                if speaker not in speaker_wc:
+                    continue
                 if lemma in lemma_map:
                     assert lemma_map[lemma] == (section, goodpos)
                 else:
                     lemma_map[lemma] = (section, goodpos)
                 token = lemma.lower()
-                rest = fields[6:]
                 sex = rest[bnc_fields.i_sex]
-                speaker = rest[bnc_fields.i_speaker]
-                if speaker in speaker_bad:
-                    continue
-                assert speaker in speaker_wc
-                if sex != 'Unknown':
-                    assert speaker in colls['gender'][sex]
+                assert speaker in colls['gender'][sex]
                 left = rest[bnc_fields.i_left]
                 this = rest[bnc_fields.i_this]
                 right = rest[bnc_fields.i_right]
@@ -98,17 +136,20 @@ def create(prefixes=[None], label_map=lambda x: x):
                 ds = datasets[label_map(label)]
                 ds.tokenlist[(speaker,token)].append((left, this, right, url))
 
-    os.makedirs(DBDIR, exist_ok=True)
     dbfile = os.path.join(DBDIR, 'types.sqlite')
-    shutil.copy(templatefile, dbfile)
+    if not existing:
+        os.makedirs(DBDIR, exist_ok=True)
+        shutil.copy(templatefile, dbfile)
     conn = sqlite3.connect(dbfile)
     conn.execute('''PRAGMA foreign_keys = ON''')
     corpus = 'bnc-spoken-demo'
+    if setting_filter is not None:
+        corpus += '-' + setting_filter
     conn.execute(
         'INSERT INTO corpus (corpuscode) VALUES (?)',
         (corpus,)
     )
-    for speaker, wc in sorted(speaker_wc.most_common()):
+    for speaker, wc in sorted(speaker_wc.items()):
         conn.execute(
             'INSERT INTO sample (corpuscode, samplecode, wordcount, description, link) VALUES (?, ?, ?, ?, ?)',
             (corpus, speaker, wc, speaker_descr[speaker], speaker_link[speaker])

@@ -14,4 +14,7 @@ LABEL_MAP = {
 def label_map(x):
     return LABEL_MAP[x]
 
-types_db_creator.create(prefixes=[None, 'fine'], label_map=label_map)
+prefixes=[None, 'fine']
+
+types_db_creator.create(prefixes=prefixes, label_map=label_map)
+types_db_creator.create(prefixes=prefixes, label_map=label_map, setting_filter='home', existing=True)
