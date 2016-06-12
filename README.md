@@ -21,6 +21,11 @@ We expect that types2 can be found at `../types`. To set it up:
 
 For more information, see http://users.ics.aalto.fi/suomela/types2/
 
+We also assume that the BNC metadata database can be found at
+
+    ../bnc-metadata-output/bnc.db
+
+For more information, see https://github.com/suomela/bnc-metadata
 
 
 Input data
