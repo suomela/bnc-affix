@@ -19,6 +19,9 @@ class Dataset:
         self.tokenlist = collections.defaultdict(list)
         self.tokeninfo = {}
 
+class Speaker:
+    pass
+
 def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing=False):
     groups = ('gender', 'social class', 'social class + gender', 'age', 'age + gender')
     sex_map = { 'f': 'Female', 'm': 'Male' }
@@ -65,9 +68,7 @@ def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing
         else:
             relevant_line[(text, sunit)] = False
 
-    speaker_wc = {}
-    speaker_descr = {}
-    speaker_link = {}
+    speakers = {}
     colls = { group: collections.defaultdict(set) for group in groups }
     for text, speaker, agegroup, sex, sc, occupation in conn.execute('''
         SELECT fileid, personid, ageGroup, sex, soc, occupation FROM bnc_person
@@ -94,10 +95,12 @@ def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing
         if occupation is not None:
             descr.append(occupation)
 
-        assert speaker not in speaker_wc
-        speaker_wc[speaker] = relevant_wc[(text, speaker)]
-        speaker_descr[speaker] = ' '.join(descr)
-        speaker_link[speaker] = SPEAKER_URL.format(text, speaker)
+        s = Speaker()
+        s.wc = relevant_wc[(text, speaker)]
+        s.descr = ' '.join(descr)
+        s.link = SPEAKER_URL.format(text, speaker)
+        assert speaker not in speakers
+        speakers[speaker] = s
 
     conn.close()
 
@@ -118,7 +121,7 @@ def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing
                 speaker = rest[bnc_fields.i_speaker]
                 if not relevant_line[(text, sunit)]:
                     continue
-                if speaker not in speaker_wc:
+                if speaker not in speakers:
                     continue
                 if lemma in lemma_map:
                     assert lemma_map[lemma] == (section, goodpos)
@@ -149,10 +152,10 @@ def create(prefixes=[None], label_map=lambda x: x, setting_filter=None, existing
         'INSERT INTO corpus (corpuscode) VALUES (?)',
         (corpus,)
     )
-    for speaker, wc in sorted(speaker_wc.items()):
+    for speaker, s in sorted(speakers.items()):
         conn.execute(
             'INSERT INTO sample (corpuscode, samplecode, wordcount, description, link) VALUES (?, ?, ?, ?, ?)',
-            (corpus, speaker, wc, speaker_descr[speaker], speaker_link[speaker])
+            (corpus, speaker, s.wc, s.descr, s.link)
         )
     for dslabel in sorted(datasets.keys()):
         ds = datasets[dslabel]
