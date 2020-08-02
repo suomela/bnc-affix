@@ -19,7 +19,7 @@ We expect that types2 can be found at `../types`. To set it up:
     make
     cd -
 
-For more information, see http://users.ics.aalto.fi/suomela/types2/
+For more information, see https://jukkasuomela.fi/types2/
 
 We also assume that the BNC metadata database can be found at
 
